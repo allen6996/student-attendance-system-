@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+supabase
+opencv-python
+numpy
+insightface
+onnxruntime
+pydantic
+python-multipart
+jinja2
+aiofiles

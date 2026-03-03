@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Face Attendance System</title>
+
+<style>
+body{font-family:Arial;margin:20px;background:#f7f7f7}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08);max-width:1100px;margin:auto}
+.row{display:flex;gap:16px;flex-wrap:wrap}
+.col{flex:1;min-width:320px}
+label{font-weight:600;margin-top:10px;display:block}
+input,button,select{width:100%;padding:10px;margin-top:6px;border-radius:10px;border:1px solid #ddd}
+button{border:none;cursor:pointer}
+.primary{background:#2563eb;color:#fff}
+.stop{background:#ef4444;color:#fff}
+video{width:100%;border-radius:12px;background:black}
+pre{background:#0b1020;color:#dbeafe;padding:12px;border-radius:12px;height:250px;overflow:auto}
+.status{padding:10px;background:#f1f5f9;border-radius:10px;margin-top:10px}
+
+/* overlay text */
+.overlayText{
+position:absolute;
+bottom:10px;
+left:10px;
+background:rgba(0,0,0,0.6);
+color:#00ff9d;
+padding:10px 15px;
+border-radius:8px;
+font-size:18px;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+<div class="card">
+<h2>Attendance System</h2>
+
+<div class="row">
+<div class="col">
+
+<h3>Add Student</h3>
+<label>Name</label>
+<input id="name"/>
+<label>Register No</label>
+<input id="reg"/>
+<button class="primary" onclick="addStudent()">Add Student</button>
+
+<h3 style="margin-top:20px">Register Face</h3>
+<label>Student UUID</label>
+<input id="student_id"/>
+<label>Upload Face Image</label>
+<input type="file" id="face_file"/>
+<button class="primary" onclick="registerFace()">Register Face</button>
+
+<h3 style="margin-top:20px">Live Attendance</h3>
+<label>Capture Interval</label>
+<select id="interval">
+<option value="2000">2 sec</option>
+<option value="3000" selected>3 sec</option>
+<option value="5000">5 sec</option>
+</select>
+
+<button class="primary" onclick="startAuto()">Start Auto Attendance</button>
+<button class="stop" onclick="stopAuto()">Stop</button>
+
+<div class="status" id="status">Status: Idle</div>
+</div>
+
+<div class="col">
+<h3>Live Webcam</h3>
+
+<div style="position:relative">
+  <video id="video" autoplay playsinline></video>
+  <div id="nameOverlay" class="overlayText" style="display:none;"></div>
+</div>
+
+<canvas id="capture" style="display:none;"></canvas>
+
+<h3>API Response</h3>
+<pre id="out">{}</pre>
+</div>
+</div>
+</div>
+
+<script>
+const API="";
+const video=document.getElementById("video");
+const capture=document.getElementById("capture");
+const statusBox=document.getElementById("status");
+const out=document.getElementById("out");
+const overlay=document.getElementById("nameOverlay");
+
+let timer=null;
+
+function setStatus(msg){statusBox.innerText="Status: "+msg;}
+
+async function initCam(){
+try{
+const stream=await navigator.mediaDevices.getUserMedia({video:true});
+video.srcObject=stream;
+await video.play();
+setStatus("Camera started");
+}catch(e){
+setStatus("Camera error");
+}
+}
+
+async function addStudent(){
+const name=document.getElementById("name").value.trim();
+const reg_no=document.getElementById("reg").value.trim();
+
+const res=await fetch(API+"/students/",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({name,reg_no})
+});
+
+const data=await res.json();
+out.innerText=JSON.stringify(data,null,2);
+
+if(data.data && data.data[0].id){
+document.getElementById("student_id").value=data.data[0].id;
+setStatus("Student added");
+}else{
+setStatus("Student added");
+}
+}
+
+async function registerFace(){
+const student_id=document.getElementById("student_id").value.trim();
+const fileInput=document.getElementById("face_file");
+
+const form=new FormData();
+form.append("file",fileInput.files[0]);
+
+const res=await fetch(API+"/face/register/"+student_id,{
+method:"POST",
+body:form
+});
+
+const data=await res.json();
+out.innerText=JSON.stringify(data,null,2);
+setStatus("Face registered");
+}
+
+function showOverlay(data){
+if(!data.results) return;
+
+let names=[];
+
+data.results.forEach(face=>{
+if(face.status==="recognized"){
+names.push(face.name);
+}
+});
+
+if(names.length>0){
+overlay.style.display="block";
+overlay.innerText = names.join(", ") + " PRESENT";
+}else{
+overlay.style.display="none";
+}
+}
+
+async function markAttendanceOnce(){
+if(video.videoWidth===0)return;
+
+capture.width=video.videoWidth;
+capture.height=video.videoHeight;
+const ctx=capture.getContext("2d");
+ctx.drawImage(video,0,0);
+
+const blob=await new Promise(r=>capture.toBlob(r,"image/jpeg",0.9));
+const form=new FormData();
+form.append("file",blob,"frame.jpg");
+
+const res=await fetch(API+"/attendance/mark-face",{method:"POST",body:form});
+const data=await res.json();
+
+out.innerText=JSON.stringify(data,null,2);
+showOverlay(data);
+
+if(data.message)setStatus(data.message);
+if(data.error)setStatus(data.error);
+}
+
+function startAuto(){
+if(timer)return;
+markAttendanceOnce();
+timer=setInterval(markAttendanceOnce,parseInt(document.getElementById("interval").value));
+setStatus("Auto attendance started");
+}
+
+function stopAuto(){
+if(timer){
+clearInterval(timer);
+timer=null;
+overlay.style.display="none";
+setStatus("Stopped");
+}
+}
+
+initCam();
+</script>
+</body>
+</html>
