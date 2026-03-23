@@ -6,7 +6,7 @@ from app.supabase_client import supabase
 from app.services.insightface_service import InsightFaceService
 from app.services.face_matching import find_best_match
 from app.services.attendance_service import mark_attendance
-
+from app.services.blink_liveness import check_blink
 router = APIRouter()
 face_engine = InsightFaceService()
 
@@ -34,11 +34,23 @@ async def mark_face_attendance(file: UploadFile = File(...)):
     results = []
 
     for face, embedding in faces:
-
-        # ---------- FACE REGION ----------
         x1, y1, x2, y2 = map(int, face.bbox)
-        face_crop = frame[y1:y2, x1:x2]
+         # ---------- CHECK LIVENESS ----------
+        padding = 10
+        x1 = max(0, x1 - padding)
+        y1 = max(0, y1 - padding)
+        x2 = min(frame.shape[1], x2 + padding)
+        y2 = min(frame.shape[0], y2 + padding)
+        is_live, ear = check_blink(frame, (x1, y1, x2, y2))
 
+        if not is_live:
+            results.append({
+                "status": "spoof_or_no_blink"
+        })
+            continue
+        # ---------- FACE REGION ----------
+        
+        face_crop = frame[y1:y2, x1:x2]
         if face_crop.size == 0:
             results.append({
                 "status": "invalid_face_region"
@@ -89,6 +101,8 @@ async def mark_face_attendance(file: UploadFile = File(...)):
             "match_score": float(score),
             "bbox": [x1, y1, x2, y2]
         })
+
+       
 
     return {
         "message": "Processed",

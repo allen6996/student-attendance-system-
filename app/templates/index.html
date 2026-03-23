@@ -51,9 +51,10 @@ font-weight:bold;
 <h3 style="margin-top:20px">Register Face</h3>
 <label>Student UUID</label>
 <input id="student_id"/>
-<label>Upload Face Image</label>
-<input type="file" id="face_file"/>
-<button class="primary" onclick="registerFace()">Register Face</button>
+<label>Face Registration</label>
+<button class="primary" onclick="captureFaces()">Start Face Capture</button>
+
+<div id="instructionBox" style="margin-top:10px;font-weight:bold;color:#2563eb"></div>
 
 <h3 style="margin-top:20px">Live Attendance</h3>
 <label>Capture Interval</label>
@@ -92,7 +93,14 @@ const capture=document.getElementById("capture");
 const statusBox=document.getElementById("status");
 const out=document.getElementById("out");
 const overlay=document.getElementById("nameOverlay");
-
+const instructionBox = document.getElementById("instructionBox");
+const captureSteps = [
+"Look straight at the camera",
+"Turn your head slightly LEFT",
+"Turn your head slightly RIGHT",
+"Look straight again",
+"Hold still for final capture"
+];
 let timer=null;
 
 function setStatus(msg){statusBox.innerText="Status: "+msg;}
@@ -106,6 +114,48 @@ setStatus("Camera started");
 }catch(e){
 setStatus("Camera error");
 }
+}
+
+async function captureFaces(){
+
+const student_id = document.getElementById("student_id").value.trim();
+
+if(!student_id){
+setStatus("Enter Student UUID first");
+return;
+}
+
+let step = 0;
+
+setStatus("Face registration started");
+
+while(step < captureSteps.length){
+
+instructionBox.innerText = captureSteps[step];
+
+await new Promise(r => setTimeout(r,2000));
+
+capture.width = video.videoWidth;
+capture.height = video.videoHeight;
+
+const ctx = capture.getContext("2d");
+ctx.drawImage(video,0,0);
+
+const blob = await new Promise(r=>capture.toBlob(r,"image/jpeg",0.9));
+
+const form = new FormData();
+form.append("file",blob,"face.jpg");
+
+await fetch(API+"/face/register/"+student_id,{
+method:"POST",
+body:form
+});
+
+step++;
+}
+
+instructionBox.innerText="Face registration completed";
+setStatus("Enrollment complete");
 }
 
 async function addStudent(){
