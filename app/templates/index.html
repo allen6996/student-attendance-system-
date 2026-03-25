@@ -1134,7 +1134,7 @@ function startAuto() {
   document.getElementById("recBadge").classList.add("show");
   setStatus("Auto attendance running", "active");
   addLog("Auto attendance started", "ok");
-  setstatus("scanning faces...", "active");
+  setstatus("Scanning faces...", "active");
 }
 
 function stopAuto() {
@@ -1201,17 +1201,34 @@ async function loadStudents() {
     const res  = await fetch(API + "/students/");
     const data = await res.json();
 
-    console.log("STUDENTS API:", data); // 🔥 DEBUG
+    console.log("STUDENTS API:", data);
 
-    allStudents = data.data || data || [];
-    renderStudents(allStudents);
+    let students = [];
 
-    document.getElementById("statStudents").textContent = allStudents.length;
+    if (Array.isArray(data)) {
+      students = data;
+    }
+    else if (Array.isArray(data.students)) {
+      students = data.students;   // 🔥 FIX
+    }
+    else if (Array.isArray(data.data)) {
+      students = data.data;
+    }
+    else if (Array.isArray(data.data?.data)) {
+      students = data.data.data;
+    }
+
+    allStudents = students;
+
+    renderStudents(students);
+
+    document.getElementById("statStudents").textContent = students.length;
+
+    const faceCount = students.filter(s => s.has_face === true).length;
+    document.getElementById("statFaces").textContent = faceCount;
 
   } catch(e) {
     console.error(e);
-    document.getElementById("studentBody").innerHTML =
-      `<tr><td colspan="6">Failed to load students</td></tr>`;
   }
 }
 
