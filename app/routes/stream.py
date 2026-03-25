@@ -8,8 +8,7 @@ from app.supabase_client import supabase
 
 router = APIRouter()
 
-# 🔥 use DroidCam
-camera = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+camera = cv2.VideoCapture(2, cv2.CAP_DSHOW)  # Use CAP_DSHOW for Windows to avoid warnings
 
 face_engine = InsightFaceService()
 

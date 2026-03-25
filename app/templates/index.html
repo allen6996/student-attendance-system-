@@ -4,256 +4,1260 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Face Attendance System</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-body{font-family:Arial;margin:20px;background:#f7f7f7}
-.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08);max-width:1100px;margin:auto}
-.row{display:flex;gap:16px;flex-wrap:wrap}
-.col{flex:1;min-width:320px}
-label{font-weight:600;margin-top:10px;display:block}
-input,button,select{width:100%;padding:10px;margin-top:6px;border-radius:10px;border:1px solid #ddd}
-button{border:none;cursor:pointer}
-.primary{background:#2563eb;color:#fff}
-.stop{background:#ef4444;color:#fff}
-video{width:100%;border-radius:12px;background:black}
-pre{background:#0b1020;color:#dbeafe;padding:12px;border-radius:12px;height:250px;overflow:auto}
-.status{padding:10px;background:#f1f5f9;border-radius:10px;margin-top:10px}
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181b22;
+    --border: #1f2330;
+    --border2: #2a2f3d;
+    --accent: #4f8ef7;
+    --accent2: #7c3aed;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --text: #e8eaf0;
+    --text2: #8890a4;
+    --text3: #555d72;
+    --sidebar-w: 72px;
+    --sidebar-expanded: 240px;
+    --font: 'Syne', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
 
-/* overlay text */
-.overlayText{
-position:absolute;
-bottom:10px;
-left:10px;
-background:rgba(0,0,0,0.6);
-color:#00ff9d;
-padding:10px 15px;
-border-radius:8px;
-font-size:18px;
-font-weight:bold;
-}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 4px;
+    flex-shrink: 0;
+    z-index: 100;
+    transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+    overflow: hidden;
+  }
+  .sidebar:hover {
+    width: var(--sidebar-expanded);
+    align-items: flex-start;
+    padding: 20px 12px;
+  }
+
+  .sidebar-logo {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .sidebar:hover .sidebar-logo {
+    margin-left: 4px;
+  }
+
+  .sidebar-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    margin-left: 12px;
+    transition: opacity 0.2s 0.1s;
+    display: none;
+  }
+  .sidebar:hover .sidebar-label {
+    display: block;
+    opacity: 1;
+  }
+
+  .sidebar-divider {
+    width: 32px;
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+    transition: width 0.3s;
+  }
+  .sidebar:hover .sidebar-divider {
+    width: calc(100% - 8px);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    width: 48px;
+    height: 46px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    flex-shrink: 0;
+    padding: 0 14px;
+    gap: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .sidebar:hover .nav-item {
+    width: 100%;
+    padding: 0 14px;
+  }
+
+  .nav-item:hover {
+    background: var(--surface2);
+  }
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(79,142,247,0.18), rgba(124,58,237,0.12));
+    border: 1px solid rgba(79,142,247,0.25);
+  }
+  .nav-item .nav-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .nav-item:hover .nav-icon { transform: scale(1.1); }
+  .nav-item .nav-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    opacity: 0;
+    transition: opacity 0.2s 0.1s;
+    display: none;
+  }
+  .nav-item.active .nav-text { color: var(--accent); }
+  .sidebar:hover .nav-item .nav-text {
+    display: block;
+    opacity: 1;
+  }
+
+  .nav-item .nav-dot {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    display: none;
+  }
+  .nav-item.active .nav-dot { opacity: 1; }
+  .sidebar:hover .nav-item .nav-dot { display: block; }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    gap: 4px;
+  }
+  .sidebar:hover .sidebar-bottom {
+    align-items: flex-start;
+    padding: 0 12px;
+  }
+
+  /* ─── MAIN ─── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: 60px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .topbar-title span { color: var(--accent); }
+  .topbar-breadcrumb {
+    font-size: 12px;
+    color: var(--text3);
+    font-weight: 500;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .breadcrumb-sep { color: var(--border2); }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--mono);
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+  .status-pill .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+  }
+  .status-pill.idle .dot { background: var(--text3); }
+  .status-pill.active .dot { background: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.2); animation: pulse 1.5s infinite; }
+  .status-pill.active { border-color: rgba(34,197,94,0.3); color: var(--green); }
+  .status-pill.error .dot { background: var(--red); }
+  .status-pill.error { border-color: rgba(239,68,68,0.3); color: var(--red); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  /* ─── PAGE VIEWS ─── */
+  .page { display: none; animation: fadeUp 0.35s ease forwards; }
+  .page.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── PAGE HEADERS ─── */
+  .page-header {
+    margin-bottom: 28px;
+  }
+  .page-header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .page-header p {
+    color: var(--text2);
+    font-size: 13px;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+  .page-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(79,142,247,0.1);
+    border: 1px solid rgba(79,142,247,0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--border2); }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    border-radius: 2px;
+    background: linear-gradient(var(--accent), var(--accent2));
+  }
+
+  /* ─── FORM ELEMENTS ─── */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+  .form-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,142,247,0.12);
+  }
+  .form-input::placeholder { color: var(--text3); }
+  select.form-input { cursor: pointer; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #3b6fd4);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(79,142,247,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,142,247,0.4); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-danger {
+    background: rgba(239,68,68,0.12);
+    color: var(--red);
+    border: 1px solid rgba(239,68,68,0.25);
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.2); }
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { background: var(--border); color: var(--text); }
+  .btn-success {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(34,197,94,0.3);
+  }
+  .btn-success:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(34,197,94,0.4); }
+  .btn-full { width: 100%; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+  /* ─── UUID DISPLAY ─── */
+  .uuid-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    word-break: break-all;
+    display: none;
+    margin-top: 14px;
+  }
+  .uuid-box.show { display: block; }
+  .uuid-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 4px; }
+
+  /* ─── CAPTURE STEPS ─── */
+  .capture-steps {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .capture-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    transition: all 0.3s;
+  }
+  .capture-step.done { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
+  .capture-step.active { background: rgba(79,142,247,0.1); border-color: rgba(79,142,247,0.35); color: var(--accent); animation: stepPulse 1s infinite; }
+
+  @keyframes stepPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(79,142,247,0.3); }
+    50% { box-shadow: 0 0 0 4px rgba(79,142,247,0); }
+  }
+
+  .instruction-bar {
+    background: rgba(79,142,247,0.08);
+    border: 1px solid rgba(79,142,247,0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    text-align: center;
+    margin-top: 14px;
+    display: none;
+  }
+  .instruction-bar.show { display: block; }
+
+  /* ─── WEBCAM ─── */
+  .video-wrapper {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 4/3;
+  }
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .video-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .face-name-tag {
+    display: none;
+    background: rgba(0,255,157,0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,255,157,0.4);
+    color: #00ff9d;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .face-name-tag.show { display: block; }
+  .rec-badge {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--red);
+    font-family: var(--mono);
+  }
+  .rec-badge.show { display: flex; }
+  .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: recBlink 1s infinite; }
+  @keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+  /* ─── TABLES ─── */
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border2);
+  }
+  thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td {
+    padding: 12px 16px;
+    color: var(--text2);
+    font-weight: 500;
+  }
+  tbody td.mono { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  tbody td.name { color: var(--text); font-weight: 600; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .badge-green { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+  .badge-red { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .badge-blue { background: rgba(79,142,247,0.1); color: var(--accent); border: 1px solid rgba(79,142,247,0.25); }
+
+  /* ─── STATS ROW ─── */
+  .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 4px; }
+
+  /* ─── SEARCH / FILTERS ─── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .search-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 9px 14px 9px 36px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23555d72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text3); }
+
+  /* ─── LOG ─── */
+  .log-box {
+    background: #060810;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #7dd3fc;
+    height: 160px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+    line-height: 1.6;
+  }
+  .log-entry { margin-bottom: 4px; }
+  .log-entry .ts { color: var(--text3); margin-right: 6px; }
+  .log-entry .ok { color: var(--green); }
+  .log-entry .err { color: var(--red); }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text3);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; font-weight: 500; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 </style>
 </head>
-
 <body>
-<div class="card">
-<h2>Attendance System</h2>
 
-<div class="row">
-<div class="col">
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">🎓</div>
 
-<h3>Add Student</h3>
-<label>Name</label>
-<input id="name"/>
-<label>Register No</label>
-<input id="reg"/>
-<button class="primary" onclick="addStudent()">Add Student</button>
+  <div class="nav-item active" data-page="enroll" onclick="navigate(this,'enroll')">
+    <span class="nav-icon">👤</span>
+    <span class="nav-text">Enrollment</span>
+    <span class="nav-dot"></span>
+  </div>
 
-<h3 style="margin-top:20px">Register Face</h3>
-<label>Student UUID</label>
-<input id="student_id"/>
-<label>Face Registration</label>
-<button class="primary" onclick="captureFaces()">Start Face Capture</button>
+  <div class="nav-item" data-page="attendance" onclick="navigate(this,'attendance')">
+    <span class="nav-icon">📸</span>
+    <span class="nav-text">Attendance</span>
+    <span class="nav-dot"></span>
+  </div>
 
-<div id="instructionBox" style="margin-top:10px;font-weight:bold;color:#2563eb"></div>
+  <div class="nav-item" data-page="records" onclick="navigate(this,'records')">
+    <span class="nav-icon">📋</span>
+    <span class="nav-text">Records</span>
+    <span class="nav-dot"></span>
+  </div>
 
-<h3 style="margin-top:20px">Live Attendance</h3>
-<label>Capture Interval</label>
-<select id="interval">
-<option value="2000">2 sec</option>
-<option value="3000" selected>3 sec</option>
-<option value="5000">5 sec</option>
-</select>
+  <div class="nav-item" data-page="students" onclick="navigate(this,'students')">
+    <span class="nav-icon">🏫</span>
+    <span class="nav-text">Students</span>
+    <span class="nav-dot"></span>
+  </div>
 
-<button class="primary" onclick="startAuto()">Start Auto Attendance</button>
-<button class="stop" onclick="stopAuto()">Stop</button>
+  <div class="sidebar-divider"></div>
 
-<div class="status" id="status">Status: Idle</div>
-</div>
+  <div class="sidebar-bottom">
+    <div class="nav-item" onclick="refreshAll()">
+      <span class="nav-icon">🔄</span>
+      <span class="nav-text">Refresh All</span>
+    </div>
+  </div>
+</nav>
 
-<div class="col">
-<h3>Live Webcam</h3>
+<!-- ═══ MAIN ═══ -->
+<div class="main">
 
-<div style="position:relative">
-  <video id="video" autoplay playsinline></video>
-  <div id="nameOverlay" class="overlayText" style="display:none;"></div>
-</div>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-title">Face<span>Attend</span></div>
+    <div class="topbar-breadcrumb">
+      <span id="breadcrumb">Enrollment</span>
+      <span class="breadcrumb-sep">›</span>
+      <span id="breadcrumb-sub" style="color:var(--text2)">Add Student</span>
+    </div>
+    <div class="status-pill idle" id="statusPill">
+      <span class="dot"></span>
+      <span id="statusText">Idle</span>
+    </div>
+  </div>
 
-<canvas id="capture" style="display:none;"></canvas>
+  <!-- Content -->
+  <div class="content">
 
-<h3>API Response</h3>
-<pre id="out">{}</pre>
-</div>
-</div>
-</div>
+    <!-- ══ PAGE 1: ENROLLMENT ══ -->
+    <div class="page active" id="page-enroll">
+      <div class="page-header">
+        <div class="page-tag">01 / Enrollment</div>
+        <h1>Student Enrollment</h1>
+        <p>Register new students and capture face embeddings for recognition.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+        <!-- Add Student -->
+        <div class="card">
+          <div class="card-title">Add New Student</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input id="name" class="form-input" placeholder="e.g. Arjun Mehta"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Register No.</label>
+              <input id="reg" class="form-input" placeholder="e.g. 22CS001"/>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="addStudent()">
+            <span>＋</span> Add Student
+          </button>
+
+          <div class="uuid-box" id="uuidBox">
+            <div class="uuid-label">Student UUID (auto-filled ↓)</div>
+            <span id="uuidDisplay">—</span>
+          </div>
+        </div>
+
+        <!-- Face Registration -->
+        <div class="card">
+          <div class="card-title">Face Registration</div>
+          <div class="form-row single">
+            <div class="form-group">
+              <label class="form-label">Student UUID</label>
+              <input id="student_id" class="form-input" placeholder="Paste UUID or add student above"/>
+            </div>
+          </div>
+
+          <div class="capture-steps" id="captureSteps">
+            <div class="capture-step" id="step-0">😐 Straight</div>
+            <div class="capture-step" id="step-1">⬅ Left</div>
+            <div class="capture-step" id="step-2">➡ Right</div>
+            <div class="capture-step" id="step-3">😐 Again</div>
+            <div class="capture-step" id="step-4">🔒 Final</div>
+          </div>
+
+          <div class="video-wrapper" style="margin-bottom:14px;">
+            <video id="videoEnroll" autoplay playsinline muted></video>
+            <div class="video-overlay">
+              <div id="enrollNameTag" class="face-name-tag"></div>
+            </div>
+          </div>
+
+          <div class="instruction-bar" id="instructionBar"></div>
+
+          <canvas id="captureCanvas" style="display:none;"></canvas>
+
+          <button class="btn btn-primary btn-full" style="margin-top:14px;" onclick="captureFaces()" id="btnCapture">
+            <span>🎯</span> Start Face Capture
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE 2: LIVE ATTENDANCE ══ -->
+    <div class="page" id="page-attendance">
+      <div class="page-header">
+        <div class="page-tag">02 / Attendance</div>
+        <h1>Live Attendance</h1>
+        <p>Capture frames and recognize faces to mark attendance automatically.</p>
+      </div>
+
+      <div class="cam-grid">
+        <!-- Camera -->
+        <div>
+          <div class="card" style="padding:16px;">
+            <div class="card-title">Live Camera Feed</div>
+            <div class="video-wrapper">
+              <video id="videoAttend" autoplay playsinline muted></video>
+              <div class="video-overlay">
+                <div id="attendNameTag" class="face-name-tag"></div>
+                <div id="recBadge" class="rec-badge">
+                  <div class="rec-dot"></div> REC
+                </div>
+              </div>
+            </div>
+            <canvas id="attendCanvas" style="display:none;"></canvas>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div>
+          <div class="card">
+            <div class="card-title">Capture Settings</div>
+            <div class="form-group" style="margin-bottom:16px;">
+              <label class="form-label">Capture Interval</label>
+              <select id="interval" class="form-input">
+                <option value="2000">Every 2 seconds</option>
+                <option value="3000" selected>Every 3 seconds</option>
+                <option value="5000">Every 5 seconds</option>
+                <option value="10000">Every 10 seconds</option>
+                <option value="20000">Every 20 seconds</option>
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <button class="btn btn-success" onclick="startAuto()" id="btnStart">
+                <span>▶</span> Start
+              </button>
+              <button class="btn btn-danger" onclick="stopAuto()" id="btnStop">
+                <span>■</span> Stop
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Response Log</div>
+            <div class="log-box" id="logBox">
+              <div class="log-entry"><span class="ts">[init]</span> System ready.</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Last API Response</div>
+            <div class="log-box" id="out" style="height:120px;color:#a5b4fc;">{}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE 3: ATTENDANCE RECORDS ══ -->
+    <div class="page" id="page-records">
+      <div class="page-header">
+        <div class="page-tag">03 / Records</div>
+        <h1>Attendance Records</h1>
+        <p>View and filter all attendance logs from the database.</p>
+      </div>
+
+      <div class="stats-grid" id="attendStats">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-label">Total Records</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--green)" id="statToday">—</div>
+          <div class="stat-label">Today's Attendance</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent)" id="statUnique">—</div>
+          <div class="stat-label">Unique Students</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <input class="search-input" id="attendSearch" placeholder="Search by name or reg no..." oninput="filterAttendance()"/>
+          <button class="btn btn-ghost" onclick="loadAttendance()">↺ Refresh</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Student Name</th>
+                <th>Reg No.</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="attendBody">
+              <tr><td colspan="6"><div class="empty-state"><div class="icon">📋</div><p>Loading records…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE 4: STUDENT DETAILS ══ -->
+    <div class="page" id="page-students">
+      <div class="page-header">
+        <div class="page-tag">04 / Students</div>
+        <h1>Student Directory</h1>
+        <p>All registered students with their enrollment and face registration status.</p>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="stat-card">
+          <div class="stat-value" id="statStudents">—</div>
+          <div class="stat-label">Total Students</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--green)" id="statFaces">—</div>
+          <div class="stat-label">Face Profiles Registered</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <input class="search-input" id="studentSearch" placeholder="Search by name or reg no..." oninput="filterStudents()"/>
+          <button class="btn btn-ghost" onclick="loadStudents()">↺ Refresh</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Full Name</th>
+                <th>Reg No.</th>
+                <th>UUID</th>
+                <th>Enrolled</th>
+                <th>Face Profile</th>
+              </tr>
+            </thead>
+            <tbody id="studentBody">
+              <tr><td colspan="6"><div class="empty-state"><div class="icon">🏫</div><p>Loading students…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
 
 <script>
-const API="";
-const video=document.getElementById("video");
-const capture=document.getElementById("capture");
-const statusBox=document.getElementById("status");
-const out=document.getElementById("out");
-const overlay=document.getElementById("nameOverlay");
-const instructionBox = document.getElementById("instructionBox");
-const captureSteps = [
-"Look straight at the camera",
-"Turn your head slightly LEFT",
-"Turn your head slightly RIGHT",
-"Look straight again",
-"Hold still for final capture"
+const API = "";
+
+// ─── STATE ───
+let autoTimer = null;
+let camStreams = {};
+let allAttendance = [];
+let allStudents = [];
+
+// ─── NAVIGATION ───
+const pageMap = {
+  enroll:    { label: "Enrollment",  sub: "Add Student" },
+  attendance:{ label: "Attendance", sub: "Live Camera"  },
+  records:   { label: "Records",    sub: "Attendance Logs" },
+  students:  { label: "Students",   sub: "Directory" }
+};
+
+function navigate(el, page) {
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  el.classList.add("active");
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("page-"+page).classList.add("active");
+
+  const info = pageMap[page];
+  document.getElementById("breadcrumb").textContent = info.label;
+  document.getElementById("breadcrumb-sub").textContent = info.sub;
+
+  if (page === "attendance") initCam("videoAttend");
+  if (page === "enroll") initCam("videoEnroll");
+  if (page === "records") loadAttendance();
+  if (page === "students") loadStudents();
+}
+
+// ─── CAMERA ───
+async function initCam(videoId) {
+  if (camStreams[videoId]) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const vid = document.getElementById(videoId);
+    vid.srcObject = stream;
+    await vid.play();
+    camStreams[videoId] = stream;
+    setStatus("Camera ready", "active");
+  } catch(e) {
+    setStatus("Camera error", "error");
+  }
+}
+
+// ─── STATUS ───
+function setStatus(msg, type = "idle") {
+  const pill = document.getElementById("statusPill");
+  pill.className = "status-pill " + type;
+  document.getElementById("statusText").textContent = msg;
+}
+
+// ─── LOG ───
+function addLog(msg, type = "") {
+  const box = document.getElementById("logBox");
+  const ts = new Date().toLocaleTimeString();
+  const entry = document.createElement("div");
+  entry.className = "log-entry";
+  entry.innerHTML = `<span class="ts">[${ts}]</span><span class="${type}">${msg}</span>`;
+  box.appendChild(entry);
+  box.scrollTop = box.scrollHeight;
+}
+
+// ─── ADD STUDENT ───
+async function addStudent() {
+  const name   = document.getElementById("name").value.trim();
+  const reg_no = document.getElementById("reg").value.trim();
+  if (!name || !reg_no) { setStatus("Fill in name & reg no.", "error"); return; }
+
+  setStatus("Adding student…", "active");
+  try {
+    const res  = await fetch(API + "/students/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, reg_no })
+    });
+    const data = await res.json();
+    document.getElementById("out").textContent = JSON.stringify(data, null, 2);
+
+    const id = data?.data?.[0]?.id || data?.id;
+    if (id) {
+      document.getElementById("student_id").value = id;
+      document.getElementById("uuidDisplay").textContent = id;
+      document.getElementById("uuidBox").classList.add("show");
+      setStatus("Student added — UUID copied", "active");
+    } else {
+      setStatus("Student added", "active");
+    }
+  } catch(e) {
+    setStatus("API error", "error");
+  }
+}
+
+// ─── FACE CAPTURE ───
+const captureInstructions = [
+  "Look straight at the camera",
+  "Turn your head slightly LEFT",
+  "Turn your head slightly RIGHT",
+  "Look straight again",
+  "Hold still"
 ];
-let timer=null;
 
-function setStatus(msg){statusBox.innerText="Status: "+msg;}
+async function captureFaces() {
+  const student_id = document.getElementById("student_id").value.trim();
+  if (!student_id) { setStatus("Enter Student UUID first", "error"); return; }
 
-async function initCam(){
-try{
-const stream=await navigator.mediaDevices.getUserMedia({video:true});
-video.srcObject=stream;
-await video.play();
-setStatus("Camera started");
-}catch(e){
-setStatus("Camera error");
-}
-}
+  const btn = document.getElementById("btnCapture");
+  btn.disabled = true;
+  btn.textContent = "Capturing…";
 
-async function captureFaces(){
+  const ib = document.getElementById("instructionBar");
+  ib.classList.add("show");
 
-const student_id = document.getElementById("student_id").value.trim();
+  await initCam("videoEnroll");
+  const video  = document.getElementById("videoEnroll");
+  const canvas = document.getElementById("captureCanvas");
 
-if(!student_id){
-setStatus("Enter Student UUID first");
-return;
-}
+  for (let step = 0; step < captureInstructions.length; step++) {
+    // Update step indicators
+    document.querySelectorAll(".capture-step").forEach((el, i) => {
+      el.className = "capture-step" + (i < step ? " done" : i === step ? " active" : "");
+    });
+    ib.textContent = captureInstructions[step];
+    await delay(2000);
 
-let step = 0;
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
 
-setStatus("Face registration started");
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.9));
+    const form = new FormData();
+    form.append("file", blob, "face.jpg");
 
-while(step < captureSteps.length){
+    await fetch(API + "/face/register/" + student_id, { method: "POST", body: form });
+  }
 
-instructionBox.innerText = captureSteps[step];
-
-await new Promise(r => setTimeout(r,2000));
-
-capture.width = video.videoWidth;
-capture.height = video.videoHeight;
-
-const ctx = capture.getContext("2d");
-ctx.drawImage(video,0,0);
-
-const blob = await new Promise(r=>capture.toBlob(r,"image/jpeg",0.9));
-
-const form = new FormData();
-form.append("file",blob,"face.jpg");
-
-await fetch(API+"/face/register/"+student_id,{
-method:"POST",
-body:form
-});
-
-step++;
+  document.querySelectorAll(".capture-step").forEach(el => el.className = "capture-step done");
+  ib.textContent = "✅ Face registration completed!";
+  setStatus("Enrollment complete", "active");
+  btn.disabled = false;
+  btn.innerHTML = "<span>🎯</span> Start Face Capture";
 }
 
-instructionBox.innerText="Face registration completed";
-setStatus("Enrollment complete");
+// ─── AUTO ATTENDANCE ───
+async function markAttendanceOnce() {
+  const video  = document.getElementById("videoAttend");
+  const canvas = document.getElementById("attendCanvas");
+  if (!video.videoWidth) return;
+
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+
+  const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.9));
+  const form = new FormData();
+  form.append("file", blob, "frame.jpg");
+
+  try {
+    const res  = await fetch(API + "/attendance/mark-face", {
+      method: "POST",
+      body: form
+    });
+
+    const data = await res.json();
+
+    document.getElementById("out").textContent =
+      JSON.stringify(data, null, 2);
+
+    showAttendOverlay(data);
+
+    const msg = data.message || data.error || "Frame processed";
+    addLog(msg, data.error ? "err" : "ok");
+
+    if (data.message) setStatus(data.message, "active");
+    if (data.error) setStatus(data.error, "error");
+
+    loadAttendance(); // ✅ refresh
+
+  } catch (e) {
+    console.error(e);
+    addLog("Network/API error", "err");
+    setStatus("Connection error", "error");
+  }
 }
 
-async function addStudent(){
-const name=document.getElementById("name").value.trim();
-const reg_no=document.getElementById("reg").value.trim();
+function showAttendOverlay(data) {
+  const tag = document.getElementById("attendNameTag");
 
-const res=await fetch(API+"/students/",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({name,reg_no})
-});
+  if (!data.results) return;
 
-const data=await res.json();
-out.innerText=JSON.stringify(data,null,2);
+  let text = "";
 
-if(data.data && data.data[0].id){
-document.getElementById("student_id").value=data.data[0].id;
-setStatus("Student added");
-}else{
-setStatus("Student added");
-}
-}
+  data.results.forEach(face => {
+    if (face.status === "recognized") {
+      text += face.name + " ✓ Present\n";
+    } else if (face.status === "unknown") {
+      text += "Unknown ⚠\n";
+    } else if (face.status === "low_clarity") {
+      text += "Low Clarity\n";
+    } else if (face.status === "spoof_or_no_blink") {
+      text += "Spoof ❌\n";
+    }
+  });
 
-async function registerFace(){
-const student_id=document.getElementById("student_id").value.trim();
-const fileInput=document.getElementById("face_file");
+  if (text) {
+    tag.textContent = text.trim();
+    tag.classList.add("show");
 
-const form=new FormData();
-form.append("file",fileInput.files[0]);
-
-const res=await fetch(API+"/face/register/"+student_id,{
-method:"POST",
-body:form
-});
-
-const data=await res.json();
-out.innerText=JSON.stringify(data,null,2);
-setStatus("Face registered");
+    setTimeout(() => tag.classList.remove("show"), 3000);
+  }
 }
 
-function showOverlay(data){
-if(!data.results) return;
-
-let names=[];
-
-data.results.forEach(face=>{
-if(face.status==="recognized"){
-names.push(face.name);
-}
-});
-
-if(names.length>0){
-overlay.style.display="block";
-overlay.innerText = names.join(", ") + " PRESENT";
-}else{
-overlay.style.display="none";
-}
+function startAuto() {
+  if (autoTimer) return;
+  markAttendanceOnce();
+  const iv = parseInt(document.getElementById("interval").value);
+  autoTimer = setInterval(markAttendanceOnce, iv);
+  document.getElementById("recBadge").classList.add("show");
+  setStatus("Auto attendance running", "active");
+  addLog("Auto attendance started", "ok");
+  setstatus("scanning faces...", "active");
 }
 
-async function markAttendanceOnce(){
-if(video.videoWidth===0)return;
-
-capture.width=video.videoWidth;
-capture.height=video.videoHeight;
-const ctx=capture.getContext("2d");
-ctx.drawImage(video,0,0);
-
-const blob=await new Promise(r=>capture.toBlob(r,"image/jpeg",0.9));
-const form=new FormData();
-form.append("file",blob,"frame.jpg");
-
-const res=await fetch(API+"/attendance/mark-face",{method:"POST",body:form});
-const data=await res.json();
-
-out.innerText=JSON.stringify(data,null,2);
-showOverlay(data);
-
-if(data.message)setStatus(data.message);
-if(data.error)setStatus(data.error);
+function stopAuto() {
+  if (autoTimer) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+  }
+  document.getElementById("recBadge").classList.remove("show");
+  document.getElementById("attendNameTag").classList.remove("show");
+  setStatus("Stopped", "idle");
+  addLog("Stopped auto attendance", "");
 }
 
-function startAuto(){
-if(timer)return;
-markAttendanceOnce();
-timer=setInterval(markAttendanceOnce,parseInt(document.getElementById("interval").value));
-setStatus("Auto attendance started");
+// ─── LOAD ATTENDANCE ───
+async function loadAttendance() {
+  try {
+    const res  = await fetch(API + "/attendance/");
+    const data = await res.json();
+    allAttendance = data.data || data || [];
+    renderAttendance(allAttendance);
+
+    // Stats
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById("statTotal").textContent  = allAttendance.length;
+    document.getElementById("statToday").textContent  = allAttendance.filter(r => (r.date||"").startsWith(today)).length;
+    const unique = new Set(allAttendance.map(r => r.name)).size;
+    document.getElementById("statUnique").textContent = unique;
+  } catch(e) {
+    document.getElementById("attendBody").innerHTML =
+      `<tr><td colspan="6"><div class="empty-state"><div class="icon">⚠️</div><p>Failed to load attendance records.</p></div></td></tr>`;
+  }
 }
 
-function stopAuto(){
-if(timer){
-clearInterval(timer);
-timer=null;
-overlay.style.display="none";
-setStatus("Stopped");
-}
+function renderAttendance(rows) {
+  const tbody = document.getElementById("attendBody");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📋</div><p>No attendance records found.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td class="mono">${i+1}</td>
+      <td class="name">${esc(r.name || r.student_name || "—")}</td>
+      <td class="mono">${esc(r.reg_no || "—")}</td>
+      <td class="mono">${esc(r.date ? new Date(r.date).toLocaleDateString() : "—")}</td>
+      <td class="mono">${esc(r.date ? new Date(r.date).toLocaleTimeString() : "—")}</td>
+      <td><span class="badge badge-green">✓ ${esc(r.status || "present")}</span></td>
+    </tr>
+  `).join("");
 }
 
-initCam();
+function filterAttendance() {
+  const q = document.getElementById("attendSearch").value.toLowerCase();
+  renderAttendance(allAttendance.filter(r =>
+    (r.name||"").toLowerCase().includes(q) ||
+    (r.student_name||"").toLowerCase().includes(q) ||
+    (r.reg_no||"").toLowerCase().includes(q)
+  ));
+}
+
+// ─── LOAD STUDENTS ───
+async function loadStudents() {
+  try {
+    const res  = await fetch(API + "/students/");
+    const data = await res.json();
+
+    console.log("STUDENTS API:", data); // 🔥 DEBUG
+
+    allStudents = data.data || data || [];
+    renderStudents(allStudents);
+
+    document.getElementById("statStudents").textContent = allStudents.length;
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById("studentBody").innerHTML =
+      `<tr><td colspan="6">Failed to load students</td></tr>`;
+  }
+}
+
+function renderStudents(rows) {
+  const tbody = document.getElementById("studentBody");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">🏫</div><p>No students registered yet.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map((s, i) => `
+    <tr>
+      <td class="mono">${i+1}</td>
+      <td class="name">${esc(s.name)}</td>
+      <td class="mono">${esc(s.reg_no)}</td>
+      <td class="mono" style="font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;">${esc(s.id)}</td>
+      <td class="mono">${s.created_at ? new Date(s.created_at).toLocaleDateString() : "—"}</td>
+      <td>
+        <span class="badge ${s.has_face ? 'badge-green' : 'badge-blue'}">
+          ${s.has_face ? "✓ Registered" : "⊙ Pending"}
+        </span>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function filterStudents() {
+  const q = document.getElementById("studentSearch").value.toLowerCase();
+  renderStudents(allStudents.filter(s =>
+    (s.name||"").toLowerCase().includes(q) ||
+    (s.reg_no||"").toLowerCase().includes(q)
+  ));
+}
+
+function refreshAll() {
+  loadAttendance();
+  loadStudents();
+  setStatus("Data refreshed", "active");
+  setTimeout(() => setStatus("Idle", "idle"), 2000);
+}
+
+// ─── UTILS ───
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+// ─── INIT ───
+initCam("videoEnroll");
 </script>
 </body>
 </html>
