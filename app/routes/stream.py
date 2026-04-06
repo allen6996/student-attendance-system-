@@ -1,14 +1,13 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 import cv2
-
 from app.services.insightface_service import InsightFaceService
 from app.services.face_matching import find_best_match
 from app.supabase_client import supabase
 
 router = APIRouter()
 
-camera = cv2.VideoCapture(2, cv2.CAP_DSHOW)  # Use CAP_DSHOW for Windows to avoid warnings
+camera = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # Use CAP_DSHOW for Windows to avoid warnings
 
 face_engine = InsightFaceService()
 
