@@ -121,7 +121,7 @@
   .form-input:read-only { color: var(--text3); cursor: not-allowed; }
   select.form-input { cursor: pointer; }
 
-  /* AUTOCOMPLETE DROPDOWN */
+  /* AUTOCOMPLETE */
   .autocomplete-dropdown {
     position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 999;
     background: var(--surface); border: 1px solid var(--border2); border-radius: 10px;
@@ -176,13 +176,18 @@
   .video-wrapper { position: relative; border-radius: 14px; overflow: hidden; background: #000; aspect-ratio: 4/3; }
   video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .video-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); display: flex; align-items: flex-end; justify-content: space-between; }
-  .face-name-tag { display: none; background: rgba(0,255,157,0.12); backdrop-filter: blur(8px); border: 1px solid rgba(0,255,157,0.4); color: #00ff9d; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 700; letter-spacing: 0.02em; }
+  .face-name-tag { display: none; background: rgba(0,255,157,0.12); backdrop-filter: blur(8px); border: 1px solid rgba(0,255,157,0.4); color: #00ff9d; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 700; letter-spacing: 0.02em; white-space: pre-line; }
   .face-name-tag.show { display: block; }
   .rec-badge { display: none; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--red); font-family: var(--mono); }
   .rec-badge.show { display: flex; }
   .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: recBlink 1s infinite; }
   @keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-  .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+  /* ── ATTENDANCE PAGE LAYOUT ── */
+  /* Top row: camera (left) + API response (right) */
+  .attend-top { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; margin-bottom: 0; }
+  /* Bottom row: settings + manual + status log — all three side by side */
+  .attend-bottom { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; align-items: start; }
 
   /* TABLES */
   .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
@@ -252,11 +257,7 @@
   .toast.toast-info { border-color: rgba(79,142,247,0.35); color: var(--accent); }
   .toast-icon { font-size: 18px; flex-shrink: 0; }
 
-  /* MANUAL ATTENDANCE SECTION */
-  .manual-divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 16px; }
-  .manual-divider span { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
-  .manual-divider::before, .manual-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
+  /* STUDENT PREVIEW */
   .student-info-preview {
     background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px;
     padding: 12px 16px; display: none; margin-bottom: 14px;
@@ -265,6 +266,14 @@
   .student-info-preview .sip-name { font-size: 14px; font-weight: 700; color: var(--text); }
   .student-info-preview .sip-reg { font-size: 11px; font-family: var(--mono); color: var(--text3); margin-top: 2px; }
   .student-info-preview .sip-badge { background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.25); color: var(--accent); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+  /* API RESPONSE BOX */
+  .api-response-box {
+    background: #060810; border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; font-family: var(--mono); font-size: 11px; color: #a5b4fc;
+    min-height: 200px; overflow-y: auto; line-height: 1.7; white-space: pre-wrap;
+    scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+  }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -377,99 +386,102 @@
         <h1>Live Attendance</h1>
         <p>Capture frames and recognize faces to mark attendance automatically.</p>
       </div>
-      <div class="cam-grid">
-        <div>
-          <div class="card" style="padding:16px;">
-            <div class="card-title">Live Camera Feed</div>
-            <div class="video-wrapper">
-              <video id="videoAttend" autoplay playsinline muted></video>
-              <div class="video-overlay">
-                <div id="attendNameTag" class="face-name-tag"></div>
-                <div id="recBadge" class="rec-badge"><div class="rec-dot"></div> REC</div>
-              </div>
+
+      <!-- TOP ROW: Camera | API Response -->
+      <div class="attend-top">
+
+        <!-- Camera feed -->
+        <div class="card" style="padding:16px; margin-bottom:0;">
+          <div class="card-title">Live Camera Feed</div>
+          <div class="video-wrapper">
+            <video id="videoAttend" autoplay playsinline muted></video>
+            <div class="video-overlay">
+              <div id="attendNameTag" class="face-name-tag"></div>
+              <div id="recBadge" class="rec-badge"><div class="rec-dot"></div> REC</div>
             </div>
-            <canvas id="attendCanvas" style="display:none;"></canvas>
+          </div>
+          <canvas id="attendCanvas" style="display:none;"></canvas>
+        </div>
+
+        <!-- API Response (top right) -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">Last API Response</div>
+          <div class="api-response-box" id="out">{}</div>
+        </div>
+
+      </div><!-- /attend-top -->
+
+      <!-- BOTTOM ROW: Settings | Manual | Status Log -->
+      <div class="attend-bottom">
+
+        <!-- Capture Settings -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">Capture Settings</div>
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">Capture Interval</label>
+            <select id="interval" class="form-input">
+              <option value="2000">Every 2 seconds</option>
+              <option value="3000" selected>Every 3 seconds</option>
+              <option value="5000">Every 5 seconds</option>
+              <option value="10000">Every 10 seconds</option>
+              <option value="20000">Every 20 seconds</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <button class="btn btn-success" onclick="startAuto()" id="btnStart"><span>▶</span> Start</button>
+            <button class="btn btn-danger" onclick="stopAuto()" id="btnStop"><span>■</span> Stop</button>
           </div>
         </div>
-        <div>
-          <div class="card">
-            <div class="card-title">Capture Settings</div>
-            <div class="form-group" style="margin-bottom:16px;">
-              <label class="form-label">Capture Interval</label>
-              <select id="interval" class="form-input">
-                <option value="2000">Every 2 seconds</option>
-                <option value="3000" selected>Every 3 seconds</option>
-                <option value="5000">Every 5 seconds</option>
-                <option value="10000">Every 10 seconds</option>
-                <option value="20000">Every 20 seconds</option>
-              </select>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <button class="btn btn-success" onclick="startAuto()" id="btnStart"><span>▶</span> Start</button>
-              <button class="btn btn-danger" onclick="stopAuto()" id="btnStop"><span>■</span> Stop</button>
-            </div>
-          </div>
 
-          <!-- MANUAL ATTENDANCE CARD -->
-          <div class="card">
-            <div class="card-title">Manual Attendance</div>
-
-            <!-- Reg No Search with Autocomplete -->
-            <div class="form-row single" style="margin-bottom:10px;">
-              <div class="form-group">
-                <label class="form-label">Registration Number</label>
-                <input
-                  id="manualRegInput"
-                  class="form-input"
-                  placeholder="Type reg no. (e.g. 22CS001)"
-                  autocomplete="off"
-                  oninput="handleRegSearch(this.value)"
-                  onblur="setTimeout(()=>closeDropdown(),200)"
-                />
-                <div class="autocomplete-dropdown" id="regDropdown"></div>
-              </div>
-            </div>
-
-            <!-- Student Preview -->
-            <div class="student-info-preview" id="studentPreview">
-              <div>
-                <div class="sip-name" id="previewName">—</div>
-                <div class="sip-reg" id="previewReg">—</div>
-              </div>
-              <span class="sip-badge">Found ✓</span>
-            </div>
-
-            <!-- Date & Time -->
-            <div class="form-row" style="margin-bottom:14px;">
-              <div class="form-group">
-                <label class="form-label">Date</label>
-                <input id="manualDate" type="date" class="form-input"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Time</label>
-                <input id="manualTime" type="time" class="form-input"/>
-              </div>
-            </div>
-
-            <button class="btn btn-amber btn-full" onclick="markManualAttendance()" id="btnManual">
-              <span>✏️</span> Mark Attendance
-            </button>
-          </div>
-
-          <div class="card">
-            <div class="card-title">Response Log</div>
-            <div class="log-box" id="logBox">
-              <div class="log-entry"><span class="ts">[init]</span> System ready.</div>
+        <!-- Manual Attendance -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">Manual Attendance</div>
+          <div class="form-row single" style="margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Registration Number</label>
+              <input
+                id="manualRegInput"
+                class="form-input"
+                placeholder="Type reg no. or name…"
+                autocomplete="off"
+                oninput="handleRegSearch(this.value)"
+                onblur="setTimeout(()=>closeDropdown(),200)"
+              />
+              <div class="autocomplete-dropdown" id="regDropdown"></div>
             </div>
           </div>
+          <div class="student-info-preview" id="studentPreview">
+            <div>
+              <div class="sip-name" id="previewName">—</div>
+              <div class="sip-reg" id="previewReg">—</div>
+            </div>
+            <span class="sip-badge">Found ✓</span>
+          </div>
+          <div class="form-row" style="margin-bottom:14px;">
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input id="manualDate" type="date" class="form-input"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Time</label>
+              <input id="manualTime" type="time" class="form-input"/>
+            </div>
+          </div>
+          <button class="btn btn-amber btn-full" onclick="markManualAttendance()" id="btnManual">
+            <span>✏️</span> Mark Attendance
+          </button>
+        </div>
 
-          <div class="card">
-            <div class="card-title">Last API Response</div>
-            <div class="log-box" id="out" style="height:120px;color:#a5b4fc;">{}</div>
+        <!-- Response Log (status moved here, bottom right) -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">Response Log</div>
+          <div class="log-box" id="logBox">
+            <div class="log-entry"><span class="ts">[init]</span> System ready.</div>
           </div>
         </div>
-      </div>
-    </div>
+
+      </div><!-- /attend-bottom -->
+    </div><!-- /page-attendance -->
 
     <!-- PAGE 3: RECORDS -->
     <div class="page" id="page-records">
@@ -570,7 +582,7 @@ let autoTimer = null;
 let camStreams = {};
 let allAttendance = [];
 let allStudents = [];
-let selectedStudent = null; // for manual attendance
+let selectedStudent = null;
 
 // ── CLOCK ──
 function updateClock() {
@@ -627,11 +639,9 @@ function setStatus(msg, type = "idle") {
 let toastTimer = null;
 function showToast(msg, type = "success", icon = "✓") {
   const t = document.getElementById("toast");
-  const m = document.getElementById("toastMsg");
-  const ic = document.getElementById("toastIcon");
   t.className = "toast toast-" + type;
-  m.textContent = msg;
-  ic.textContent = icon;
+  document.getElementById("toastMsg").textContent = msg;
+  document.getElementById("toastIcon").textContent = icon;
   t.classList.add("show");
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove("show"), 3500);
@@ -692,7 +702,7 @@ async function captureFaces() {
   const ib = document.getElementById("instructionBar");
   ib.classList.add("show");
   await initCam("videoEnroll");
-  const video = document.getElementById("videoEnroll");
+  const video  = document.getElementById("videoEnroll");
   const canvas = document.getElementById("captureCanvas");
   for (let step = 0; step < captureInstructions.length; step++) {
     document.querySelectorAll(".capture-step").forEach((el, i) => {
@@ -717,7 +727,7 @@ async function captureFaces() {
 
 // ── AUTO ATTENDANCE ──
 async function markAttendanceOnce() {
-  const video = document.getElementById("videoAttend");
+  const video  = document.getElementById("videoAttend");
   const canvas = document.getElementById("attendCanvas");
   if (!video.videoWidth) return;
   canvas.width = video.videoWidth; canvas.height = video.videoHeight;
@@ -733,7 +743,7 @@ async function markAttendanceOnce() {
     const msg = data.message || data.error || "Frame processed";
     addLog(msg, data.error ? "err" : "ok");
     if (data.message) setStatus(data.message, "active");
-    if (data.error) setStatus(data.error, "error");
+    if (data.error)   setStatus(data.error, "error");
     loadAttendance();
   } catch(e) { addLog("Network/API error", "err"); setStatus("Connection error", "error"); }
 }
@@ -743,13 +753,14 @@ function showAttendOverlay(data) {
   if (!data.results) return;
   let text = "";
   data.results.forEach(face => {
-    if (face.status === "recognized") text += face.name + " ✓ Present\n";
-    else if (face.status === "unknown") text += "Unknown ⚠\n";
+    if (face.status === "recognized")       text += face.name + " ✓ Present\n";
+    else if (face.status === "unknown")     text += "Unknown ⚠\n";
     else if (face.status === "low_clarity") text += "Low Clarity\n";
-    else if (face.status === "spoof_or_no_blink") text += "Spoof ❌\n";
+    else if (face.status === "spoof")       text += "Spoof ❌\n";
   });
   if (text) {
-    tag.textContent = text.trim(); tag.classList.add("show");
+    tag.textContent = text.trim();
+    tag.classList.add("show");
     setTimeout(() => tag.classList.remove("show"), 3000);
   }
 }
@@ -771,53 +782,38 @@ function stopAuto() {
   addLog("Stopped auto attendance", "");
 }
 
-// ═══════════════════════════════════════════════
 // ── MANUAL ATTENDANCE ──
-// ═══════════════════════════════════════════════
-
 function setManualDefaults() {
   const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10);
-  const timeStr = now.toTimeString().slice(0, 5);
-  document.getElementById("manualDate").value = dateStr;
-  document.getElementById("manualTime").value = timeStr;
+  document.getElementById("manualDate").value = now.toISOString().slice(0, 10);
+  document.getElementById("manualTime").value = now.toTimeString().slice(0, 5);
 }
 
 function handleRegSearch(val) {
   const q = val.trim().toLowerCase();
   const dropdown = document.getElementById("regDropdown");
-
-  // Clear selected student if user is editing
   selectedStudent = null;
   document.getElementById("studentPreview").classList.remove("show");
-
-  if (!q || allStudents.length === 0) {
-    dropdown.classList.remove("open");
-    dropdown.innerHTML = "";
-    return;
-  }
-
+  if (!q || allStudents.length === 0) { dropdown.classList.remove("open"); dropdown.innerHTML = ""; return; }
   const matches = allStudents.filter(s =>
     (s.reg_no || "").toLowerCase().includes(q) ||
     (s.name   || "").toLowerCase().includes(q)
   ).slice(0, 6);
-
   if (!matches.length) {
     dropdown.innerHTML = `<div class="autocomplete-item"><span class="ac-name" style="color:var(--text3)">No students found</span></div>`;
     dropdown.classList.add("open");
     return;
   }
-
   dropdown.innerHTML = matches.map(s => {
     const reg  = esc(s.reg_no || "");
     const name = esc(s.name   || "");
-    const regH = reg.replace(new RegExp(q, 'gi'), m => `<span class="ac-match">${m}</span>`);
-    const nmH  = name.replace(new RegExp(q, 'gi'), m => `<span class="ac-match">${m}</span>`);
-    return `
-      <div class="autocomplete-item" onmousedown="selectManualStudent('${esc(s.reg_no)}','${esc(s.name)}','${esc(s.id)}')">
-        <span class="ac-name">${nmH}</span>
-        <span class="ac-reg">${regH}</span>
-      </div>`;
+    const re   = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const regH = reg.replace(re,  m => `<span class="ac-match">${m}</span>`);
+    const nmH  = name.replace(re, m => `<span class="ac-match">${m}</span>`);
+    return `<div class="autocomplete-item" onmousedown="selectManualStudent('${esc(s.reg_no)}','${esc(s.name)}','${esc(s.id)}')">
+      <span class="ac-name">${nmH}</span>
+      <span class="ac-reg">${regH}</span>
+    </div>`;
   }).join("");
   dropdown.classList.add("open");
 }
@@ -840,30 +836,25 @@ async function markManualAttendance() {
     showToast("Please select a student from the list", "error", "⚠️");
     return;
   }
-
   const date = document.getElementById("manualDate").value;
   const time = document.getElementById("manualTime").value;
-
-  if (!date || !time) {
-    showToast("Please provide both date and time", "error", "⚠️");
-    return;
-  }
+  if (!date || !time) { showToast("Please provide both date and time", "error", "⚠️"); return; }
 
   const btn = document.getElementById("btnManual");
   btn.disabled = true;
   btn.innerHTML = "<span>⏳</span> Marking…";
 
   const payload = {
+    student_id: selectedStudent.id,
     reg_no:     selectedStudent.reg_no,
     name:       selectedStudent.name,
-    student_id: selectedStudent.id,
-    date:       date,           // "YYYY-MM-DD"
-    time:       time,           // "HH:MM"
+    date,
+    time,
     status:     "present"
   };
 
   try {
-    const res = await fetch(API + "/attendance/mark-manual", {
+    const res  = await fetch(API + "/attendance/mark-manual", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(payload)
@@ -875,8 +866,6 @@ async function markManualAttendance() {
       showToast(`${selectedStudent.name} marked Present on ${date} at ${time}`, "success", "✓");
       addLog(`Manual: ${selectedStudent.name} (${selectedStudent.reg_no}) — ${date} ${time}`, "ok");
       setStatus("Manual attendance marked", "active");
-
-      // Reset form
       document.getElementById("manualRegInput").value = "";
       document.getElementById("studentPreview").classList.remove("show");
       selectedStudent = null;
@@ -885,7 +874,7 @@ async function markManualAttendance() {
     } else {
       const errMsg = data.detail || data.error || data.message || "Failed to mark attendance";
       showToast(errMsg, "error", "✗");
-      addLog("Manual attendance error: " + errMsg, "err");
+      addLog("Manual error: " + errMsg, "err");
     }
   } catch(e) {
     showToast("Network error — check backend connection", "error", "✗");
@@ -906,8 +895,7 @@ async function loadAttendance() {
     const today = new Date().toISOString().slice(0, 10);
     document.getElementById("statTotal").textContent  = allAttendance.length;
     document.getElementById("statToday").textContent  = allAttendance.filter(r => (r.date || "").startsWith(today)).length;
-    const unique = new Set(allAttendance.map(r => r.name)).size;
-    document.getElementById("statUnique").textContent = unique;
+    document.getElementById("statUnique").textContent = new Set(allAttendance.map(r => r.name)).size;
   } catch(e) {
     document.getElementById("attendBody").innerHTML =
       `<tr><td colspan="6"><div class="empty-state"><div class="icon">⚠️</div><p>Failed to load attendance records.</p></div></td></tr>`;
@@ -920,24 +908,26 @@ function renderAttendance(rows) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📋</div><p>No attendance records found.</p></div></td></tr>`;
     return;
   }
-  tbody.innerHTML = rows.map((r, i) => `
-    <tr>
+  tbody.innerHTML = rows.map((r, i) => {
+    // r.date = "YYYY-MM-DD", r.time = "HH:MM:SS" — both strings from backend
+    const dateDisp = r.date ? new Date(r.date + "T00:00:00").toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}) : "—";
+    const timeDisp = r.time ? r.time.slice(0, 5) : "—";   // "HH:MM"
+    return `<tr>
       <td class="mono">${i+1}</td>
-      <td class="name">${esc(r.name || r.student_name || "—")}</td>
+      <td class="name">${esc(r.name || "—")}</td>
       <td class="mono">${esc(r.reg_no || "—")}</td>
-      <td class="mono">${esc(r.date ? new Date(r.date).toLocaleDateString() : "—")}</td>
-      <td class="mono">${esc(r.date ? new Date(r.date).toLocaleTimeString() : "—")}</td>
+      <td class="mono">${dateDisp}</td>
+      <td class="mono">${timeDisp}</td>
       <td><span class="badge badge-green">✓ ${esc(r.status || "present")}</span></td>
-    </tr>
-  `).join("");
+    </tr>`;
+  }).join("");
 }
 
 function filterAttendance() {
   const q = document.getElementById("attendSearch").value.toLowerCase();
   renderAttendance(allAttendance.filter(r =>
-    (r.name||"").toLowerCase().includes(q) ||
-    (r.student_name||"").toLowerCase().includes(q) ||
-    (r.reg_no||"").toLowerCase().includes(q)
+    (r.name   || "").toLowerCase().includes(q) ||
+    (r.reg_no || "").toLowerCase().includes(q)
   ));
 }
 
@@ -947,16 +937,14 @@ async function loadStudents() {
     const res  = await fetch(API + "/students/");
     const data = await res.json();
     let students = [];
-    if (Array.isArray(data))              students = data;
+    if (Array.isArray(data))               students = data;
     else if (Array.isArray(data.students)) students = data.students;
     else if (Array.isArray(data.data))     students = data.data;
     allStudents = students;
     renderStudents(students);
     document.getElementById("statStudents").textContent = students.length;
-
-    // Attendance stats across students
     const percentages = students.map(s => getAttendancePercent(s));
-    const avg = percentages.length ? Math.round(percentages.reduce((a,b)=>a+b,0) / percentages.length) : 0;
+    const avg    = percentages.length ? Math.round(percentages.reduce((a,b)=>a+b,0) / percentages.length) : 0;
     const below75 = percentages.filter(p => p < 75).length;
     document.getElementById("statAvgAttend").textContent = avg + "%";
     document.getElementById("statBelow75").textContent   = below75;
@@ -964,7 +952,6 @@ async function loadStudents() {
 }
 
 function getAttendancePercent(student) {
-  // Count unique dates this student was present
   const days = new Set(
     allAttendance
       .filter(r =>
@@ -984,12 +971,11 @@ function renderStudents(rows) {
     return;
   }
   tbody.innerHTML = rows.map((s, i) => {
-    const pct    = getAttendancePercent(s);
-    const days   = Math.round((pct / 100) * TOTAL_DAYS);
-    const color  = pct >= 75 ? "var(--green)" : pct >= 50 ? "var(--amber)" : "var(--red)";
-    const badge  = pct >= 75 ? "badge-green" : pct >= 50 ? "badge-amber" : "badge-red";
-    return `
-    <tr>
+    const pct   = getAttendancePercent(s);
+    const days  = Math.round((pct / 100) * TOTAL_DAYS);
+    const color = pct >= 75 ? "var(--green)" : pct >= 50 ? "var(--amber)" : "var(--red)";
+    const badge = pct >= 75 ? "badge-green"  : pct >= 50 ? "badge-amber"  : "badge-red";
+    return `<tr>
       <td class="mono">${i+1}</td>
       <td class="name">${esc(s.name)}</td>
       <td class="mono">${esc(s.reg_no)}</td>
@@ -1011,8 +997,8 @@ function renderStudents(rows) {
 function filterStudents() {
   const q = document.getElementById("studentSearch").value.toLowerCase();
   renderStudents(allStudents.filter(s =>
-    (s.name||"").toLowerCase().includes(q) ||
-    (s.reg_no||"").toLowerCase().includes(q)
+    (s.name   || "").toLowerCase().includes(q) ||
+    (s.reg_no || "").toLowerCase().includes(q)
   ));
 }
 
